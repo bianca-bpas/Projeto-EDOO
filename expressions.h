@@ -86,6 +86,8 @@ class UnaryExpression : public Expression {
                         return -arg;
                         throw ExpressionError("Operador Unário para Inteiros inválido: " + operador);
                     } 
+                }else if constexpr (is_same_v<T, bool>) {
+                    throw ExpressionError("Operador Unário para Booleanos inválido: " + operador);
                 }
                 return arg;
             }, value);
