@@ -50,7 +50,7 @@ class Parser {
             if (current_token.get_type() == "OR"){
                 advance("OR");
                 auto e2 = parse_and_exp();
-                return make_unique<BinaryExpression>(std::move(e1), "||", std::move(e2));
+                return make_unique<BinaryExpression>(move(e1), "||", move(e2));
             }
             return e1;
         }
@@ -62,7 +62,7 @@ class Parser {
             if (current_token.get_type() == "AND"){
                 advance("AND");
                 auto e2 = parse_eq_exp();
-                return make_unique<BinaryExpression>(std::move(e1), "&&", std::move(e2));
+                return make_unique<BinaryExpression>(move(e1), "&&", move(e2));
             }
             return e1;
         }
@@ -81,7 +81,7 @@ class Parser {
                 advance(current_token.get_type());
 
                 auto e2 = parse_rel_exp();
-                return make_unique<BinaryExpression>(std::move(e1), operador, std::move(e2));
+                return make_unique<BinaryExpression>(move(e1), operador, move(e2));
             }
             return e1;
         }
@@ -102,7 +102,7 @@ class Parser {
                 advance(current_token.get_type());
 
                 auto e2 = parse_add_exp();
-                return make_unique<BinaryExpression>(std::move(e1), operador, std::move(e2));
+                return make_unique<BinaryExpression>(move(e1), operador, move(e2));
             }
             return e1;
         }
@@ -121,7 +121,7 @@ class Parser {
                 advance(current_token.get_type());
 
                 auto e2 = parse_mul_exp();
-                return make_unique<BinaryExpression>(std::move(e1), operador, std::move(e2));
+                return make_unique<BinaryExpression>(move(e1), operador, move(e2));
             }
             return e1;
         }
@@ -140,7 +140,7 @@ class Parser {
                 advance(current_token.get_type());
 
                 auto e2 = parse_unary_exp();
-                return make_unique<BinaryExpression>(std::move(e1), operador, std::move(e2));
+                return make_unique<BinaryExpression>(move(e1), operador, move(e2));
             }
             return e1;
         }
@@ -150,7 +150,7 @@ class Parser {
             if (current_token.get_type() == "MINUS"){
                 advance("MINUS");
                 auto e1 = parse_primary_exp();
-                return make_unique<UnaryExpression>("-", std::move(e1));
+                return make_unique<UnaryExpression>("-", move(e1));
             }
             return parse_primary_exp();
         }
@@ -177,7 +177,7 @@ class Parser {
                 advance("LPAREN");
                 auto e1 = parse_exp();
                 advance("RPAREN");
-                return make_unique<PrimaryExpression>(std::move(e1));
+                return make_unique<PrimaryExpression>(move(e1));
             }
             error("Token inesperado: " + token.get_type());
             return nullptr;
