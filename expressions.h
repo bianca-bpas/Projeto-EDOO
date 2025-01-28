@@ -55,18 +55,6 @@ class UnaryExpression : public Expression {
         unique_ptr<Expression> expression;
         string operador;
 
-        static ValueType applyUnaryOperator(const string& op, const ValueType& value) {
-            return visit([&op](auto&& arg) -> ValueType {
-                using T = decay_t<decltype(arg)>;
-
-                if constexpr (is_same_v<T, int>) {
-                    if (op == "-") return -arg;
-                    throw ExpressionError("Operador Unário para Inteiros inválido: " + op);
-                } 
-                throw ExpressionError("Operador Unário não suportado");
-            }, value);
-        }
-
     public:
         explicit UnaryExpression(string operador, unique_ptr<Expression> expr) 
             : operador(operador), expression(std::move(expr)) {
