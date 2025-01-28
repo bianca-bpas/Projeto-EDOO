@@ -4,6 +4,7 @@
 #include "lexer.h"
 #include "expressions.h"
 #include <map>
+#include <memory>
 
 class ParserError : public runtime_error {
     public:
@@ -33,49 +34,42 @@ class Parser {
         ~Parser() = default;
 
         variant<int, bool> evaluate(){
-            Expression* expr = parse_exp();
+            auto expr = parse_exp();
             return expr->evaluate();
         }
 
-        Expression* parse_exp(){
+        unique_ptr<Expression> parse_exp(){
             // <exp> ::= <or_exp>
             return parse_or_exp();
         }
 
-        Expression* parse_or_exp(){
+        unique_ptr<Expression> parse_or_exp(){
             // <or_exp> ::= <and_exp> [ "||" <and_exp> ]
-            Expression* e1;
-            e1 = parse_and_exp();
+            auto e1 = parse_and_exp();
 
             if (current_token.get_type() == "OR"){
                 advance("OR");
-                Expression* e2;
-                e2 = parse_and_exp();
-                return new BinaryExpression(e1, "||", e2);
-            } else {
-                return e1;
+                auto e2 = parse_and_exp();
+                return make_unique<BinaryExpression>(std::move(e1), "||", std::move(e2));
             }
+            return e1;
         }
 
-        Expression* parse_and_exp(){
+        unique_ptr<Expression> parse_and_exp(){
             // <and_exp> ::= <eq_exp> [ "&&" <eq_exp> ]
-            Expression* e1;
-            e1 = parse_eq_exp();
+            auto e1 = parse_eq_exp();
 
             if (current_token.get_type() == "AND"){
                 advance("AND");
-                Expression* e2;
-                e2 = parse_eq_exp();
-                return new BinaryExpression(e1, "&&", e2);
-            } else {
-                return e1;
+                auto e2 = parse_eq_exp();
+                return make_unique<BinaryExpression>(std::move(e1), "&&", std::move(e2));
             }
+            return e1;
         }
 
-        Expression* parse_eq_exp(){
+        unique_ptr<Expression> parse_eq_exp(){
             // <eq_exp> ::= <rel_exp> [ "==" <rel_exp> | "!=" <rel_exp> ]
-            Expression* e1;
-            e1 = parse_rel_exp();
+            auto e1 = parse_rel_exp();
 
             map<string, string> operadores = {
                 {"EQUALS","=="},
@@ -86,18 +80,15 @@ class Parser {
                 string operador = operadores[current_token.get_type()];
                 advance(current_token.get_type());
 
-                Expression* e2;
-                e2 = parse_rel_exp();
-                return new BinaryExpression(e1, operador, e2);
-            } else {
-                return e1;
+                auto e2 = parse_rel_exp();
+                return make_unique<BinaryExpression>(std::move(e1), operador, std::move(e2));
             }
+            return e1;
         }
 
-        Expression* parse_rel_exp(){
+        unique_ptr<Expression> parse_rel_exp(){
             // <rel_exp> ::= <add_exp> [ "<" <add_exp> | ">" <add_exp> | "<=" <add_exp> | ">=" <add_exp> ]
-            Expression* e1;
-            e1 = parse_add_exp();
+            auto e1 = parse_add_exp();
 
             map<string, string> operadores = {
                 {"LESS","<"},
@@ -110,18 +101,15 @@ class Parser {
                 string operador = operadores[current_token.get_type()];
                 advance(current_token.get_type());
 
-                Expression* e2;
-                e2 = parse_add_exp();
-                return new BinaryExpression(e1, operador, e2);
-            } else {
-                return e1;
+                auto e2 = parse_add_exp();
+                return make_unique<BinaryExpression>(std::move(e1), operador, std::move(e2));
             }
+            return e1;
         }
         
-        Expression* parse_add_exp(){
+        unique_ptr<Expression> parse_add_exp(){
             // <add_exp> ::= <mul_exp> [ "+" <mul_exp> | "-" <mul_exp> ]
-            Expression* e1;
-            e1 = parse_mul_exp();
+            auto e1 = parse_mul_exp();
 
             map<string, string> operadores = {
                 {"PLUS","+"},
@@ -132,18 +120,15 @@ class Parser {
                 string operador = operadores[current_token.get_type()];
                 advance(current_token.get_type());
 
-                Expression* e2;
-                e2 = parse_mul_exp();
-                return new BinaryExpression(e1, operador, e2);
-            } else {
-                return e1;
+                auto e2 = parse_mul_exp();
+                return make_unique<BinaryExpression>(std::move(e1), operador, std::move(e2));
             }
+            return e1;
         }
 
-        Expression* parse_mul_exp(){
+        unique_ptr<Expression> parse_mul_exp(){
             // <mul_exp> ::= <unary_exp> [ "*" <unary_exp> | "/" <unary_exp> ]
-            Expression* e1;
-            e1 = parse_unary_exp();
+            auto e1 = parse_unary_exp();
 
             map<string, string> operadores = {
                 {"MULTIPLY","*"},
@@ -154,28 +139,23 @@ class Parser {
                 string operador = operadores[current_token.get_type()];
                 advance(current_token.get_type());
 
-                Expression* e2;
-                e2 = parse_unary_exp();
-                return new BinaryExpression(e1, operador, e2);
-            } else {
-                return e1;
+                auto e2 = parse_unary_exp();
+                return make_unique<BinaryExpression>(std::move(e1), operador, std::move(e2));
             }
-        }
-
-        Expression* parse_unary_exp(){
-            // <unary_exp> ::= "-" <primary_exp> | <primary_exp>
-            Expression* e1;
-            if (current_token.get_type() == "MINUS"){
-                advance("MINUS");
-
-                e1 = parse_primary_exp();
-                return new UnaryExpression("-", e1);
-            }
-            e1 = parse_primary_exp();
             return e1;
         }
 
-        Expression* parse_primary_exp(){
+        unique_ptr<Expression> parse_unary_exp(){
+            // <unary_exp> ::= "-" <primary_exp> | <primary_exp>
+            if (current_token.get_type() == "MINUS"){
+                advance("MINUS");
+                auto e1 = parse_primary_exp();
+                return make_unique<UnaryExpression>("-", std::move(e1));
+            }
+            return parse_primary_exp();
+        }
+
+        unique_ptr<Expression> parse_primary_exp(){
             // <primary_exp> ::= <literal> | "(" <exp> ")"
             Token token = current_token;
 
@@ -184,10 +164,10 @@ class Parser {
 
                 auto value = token.get_value();
 
-                return visit([](auto&& arg) -> Expression* {
+                return visit([](auto&& arg) -> unique_ptr<Expression> {
                     using T = decay_t<decltype(arg)>;
                     if constexpr (is_same_v<T, int> || is_same_v<T, bool>) {
-                        return new PrimaryExpression(new Literal(arg));
+                        return make_unique<PrimaryExpression>(make_unique<Literal>(arg));
                     } else {
                         throw ParserError("Tipo de Literal não suportado");
                     }
@@ -195,10 +175,9 @@ class Parser {
             }
             if (token.get_type() == "LPAREN"){
                 advance("LPAREN");
-                Expression* e1;
-                e1 = parse_exp();
+                auto e1 = parse_exp();
                 advance("RPAREN");
-                return new PrimaryExpression(e1);
+                return make_unique<PrimaryExpression>(std::move(e1));
             }
             error("Token inesperado: " + token.get_type());
             return nullptr;

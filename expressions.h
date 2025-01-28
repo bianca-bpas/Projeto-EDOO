@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <variant>
+#include <memory>
 using namespace std;
 
 class ExpressionError : public runtime_error {
@@ -31,17 +32,16 @@ class Literal : public Expression {
 
 class PrimaryExpression : public Expression {
     private:
-        Expression* expression;
+        unique_ptr<Expression> expression;
         bool Parenthesized;
     
     public:
-        explicit PrimaryExpression(Expression* expr, bool parenthesis = false) : expression(expr), Parenthesized(parenthesis) {
+        explicit PrimaryExpression(unique_ptr<Expression> expr, bool parenthesis = false) 
+            : expression(std::move(expr)), Parenthesized(parenthesis) {
             if (!expression) {
                 throw ExpressionError("Não é possível criar PrimaryExpression a partir de uma expressão nula");
             }
         }
-
-        ~PrimaryExpression() { delete expression; }
 
         variant<int, bool> evaluate() const override { 
             return expression->evaluate(); 
@@ -52,7 +52,7 @@ class PrimaryExpression : public Expression {
 
 class UnaryExpression : public Expression {
     private:
-        Expression* expression;
+        unique_ptr<Expression> expression;
         string operador;
 
         static ValueType applyUnaryOperator(const string& op, const ValueType& value) {
@@ -68,14 +68,12 @@ class UnaryExpression : public Expression {
         }
 
     public:
-        explicit UnaryExpression(string operador, Expression* expr) 
-            : operador(operador), expression(expr) {
+        explicit UnaryExpression(string operador, unique_ptr<Expression> expr) 
+            : operador(operador), expression(std::move(expr)) {
             if (!expression) {
                 throw ExpressionError("Não é possível criar uma UnaryExpression a partir de uma expressão nula");
             }
         }
-
-        ~UnaryExpression() { delete expression; }
 
         ValueType evaluate() const override {
             auto value = expression->evaluate();
@@ -97,18 +95,17 @@ class UnaryExpression : public Expression {
 class BinaryExpression : public Expression {
     private:
         string operador;
-        Expression* left;
-        Expression* right;
+        unique_ptr<Expression> left;
+        unique_ptr<Expression> right;
     
     public:
         // Construtor para Expressions
-        explicit BinaryExpression(Expression* left, string operador, Expression* right) : left(left), operador(operador), right(right) {
-            if (!left || !right){
+        explicit BinaryExpression(unique_ptr<Expression> left, string operador, unique_ptr<Expression> right) 
+            : left(std::move(left)), operador(operador), right(std::move(right)) {
+            if (!this->left || !this->right){
                 throw ExpressionError("Não é possível criar uma BinaryExpression com operandos nulos");
             }
         }
-
-        ~BinaryExpression() {delete left; delete right; }
 
         ValueType evaluate() const override {
             auto left_value = left->evaluate();
