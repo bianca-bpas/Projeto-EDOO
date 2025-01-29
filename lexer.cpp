@@ -34,17 +34,6 @@ bool Lexer::boolean() {
     return (result == "true") ? true : false;
 }
 
-bool Lexer::is_end() {
-    return current_char == '\0';
-}
-
-bool Lexer::next_char(char expected) {
-    if (pos + 1 >= text.length()) {
-        return false;
-    }
-    return text[pos + 1] == expected;
-}
-
 Token Lexer::get_next_token() {
     while (!is_end()) {
         // Pula espaços em branco

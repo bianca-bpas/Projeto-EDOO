@@ -26,7 +26,7 @@ class Literal : public Expression {
     public:
         explicit Literal(variant<int, bool> v) : value(v) {}
 
-        variant<int, bool> evaluate() const override { return value; }
+        inline variant<int, bool> evaluate() const override { return value; }
 };
 
 class PrimaryExpression : public Expression {
@@ -42,11 +42,11 @@ class PrimaryExpression : public Expression {
             }
         }
 
-        variant<int, bool> evaluate() const override { 
+        inline variant<int, bool> evaluate() const override { 
             return expression->evaluate(); 
         }
 
-        bool isParenthesized() const { return Parenthesized; }
+        inline bool isParenthesized() const { return Parenthesized; }
 };
 
 class UnaryExpression : public Expression {

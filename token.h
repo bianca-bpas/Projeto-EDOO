@@ -14,8 +14,8 @@ class Token {
         Token(string t, variant<int, bool, string> v) : type(t), value(v) {}
         ~Token() = default;
 
-        string& get_type() { return this->type; }
-        auto& get_value() { return this->value; }
+        inline string& get_type() { return this->type; }
+        inline auto& get_value() { return this->value; }
         string to_string();
 };
 

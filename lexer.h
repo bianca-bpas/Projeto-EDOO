@@ -20,8 +20,11 @@ class Lexer {
         void skip_whitespace();
         int integer(string result = "");
         bool boolean();
-        bool is_end();
-        bool next_char(char expected);
+        inline bool is_end() { return current_char == '\0'; }
+        inline bool next_char(char expected) {
+            if (pos + 1 >= text.length()) return false;
+            return text[pos + 1] == expected;
+        }
 
     public:
         explicit Lexer(string input) : text(input), pos(0) {
