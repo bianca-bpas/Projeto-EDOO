@@ -14,13 +14,14 @@ int main(){
         try{
             auto result = evaluator.evaluate(input);
 
-            visit([](auto&& value) {
-                using T = decay_t<decltype(value)>;
-                if constexpr (is_same_v<T, int>) {cout << value;}
-                else if constexpr(is_same_v<T, bool>) {cout << (value ? "true" : "false");}
-                cout << '\n';
-                
-            }, result);
+            if (holds_alternative<int>(result)) {
+                cout << get<int>(result);
+            }
+            else if (holds_alternative<bool>(result)) {
+                cout << (get<bool>(result) ? "true" : "false");
+            }
+            cout << '\n';
+
         } catch(exception&){
             cout << "error" << '\n';
         }   
